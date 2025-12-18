@@ -32,6 +32,7 @@ htmlcov/
 env/
 venv/
 ENV/
+db/
 env.bak/
 venv.bak/
 .spyderproject
