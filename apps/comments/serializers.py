@@ -14,7 +14,7 @@ class CommentSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'content', 'author', 'author_info', 'parent',
             'is_active', 'replies_count', 'is_reply',
-            'created_at', 'updated_at'
+            'created_at', 'updated_at', 'post'
         ]
         read_only_fields = ['author', 'is_active']
 
@@ -40,7 +40,7 @@ class CommentCreateSerializer(serializers.ModelSerializer):
         return value
 
     def validate_parent(self, value):
-        if value and value.post != self.initial_data.get('post'):
+        if value and value.post.id != self.initial_data.get('post'):
             raise serializers.ValidationError(
                 'Parent comment must belong to the same post.'
             )
@@ -71,5 +71,3 @@ class CommentDetailSerializer(CommentSerializer):
             replies = obj.replies.filter(is_active=True).order_by('created_at')
             return CommentSerializer(replies, many=True, context=self.context).data
         return []
-    
-    
