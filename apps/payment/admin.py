@@ -41,7 +41,6 @@ class PaymentAdmin(admin.ModelAdmin):
         ('Stripe Data', {
             'fields': (
                 'stripe_payment_intent_id', 'stripe_session_id', 
-                'stripe_customer_id'
             ),
             'classes': ('collapse',)
         }),

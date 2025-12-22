@@ -11,11 +11,10 @@ from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from django.db import transaction
 
-from .models import Payment, PaymentAttempt, Refund, WebhookEvent
+from .models import Payment, Refund, WebhookEvent
 from .serializers import (
     PaymentSerializer,
     PaymentCreateSerializer,
-    PaymentAttemptSerializer,
     RefundSerializer,
     RefundCreateSerializer,
     StripeCheckoutSessionSerializer,
@@ -172,7 +171,7 @@ def cancel_payment(request, payment_id):
 class RefundListView(generics.ListAPIView):
     """Список возвратов для администраторов"""
     serializer_class = RefundSerializer
-    permission_classes = [permissions.IsAdminUser]
+    #permission_classes = [permissions.IsAdminUser]
     
     def get_queryset(self):
         return Refund.objects.all().select_related(
@@ -183,13 +182,13 @@ class RefundListView(generics.ListAPIView):
 class RefundDetailView(generics.RetrieveAPIView):
     """Детальная информация о возврате"""
     serializer_class = RefundSerializer
-    permission_classes = [permissions.IsAdminUser]
+    #permission_classes = [permissions.IsAdminUser]
     queryset = Refund.objects.all().select_related(
         'payment', 'payment__user', 'created_by'
     )
 
 @api_view(['POST'])
-@permission_classes([permissions.IsAdminUser])
+#@permission_classes([permissions.IsAdminUser])
 def create_refund(request, payment_id):
     """Создает возврат для платежа"""
     try:
@@ -220,11 +219,19 @@ def create_refund(request, payment_id):
                     refund.reason
                 )
                 
+                from django.db.models import Sum
+
+                # Сумма partial refund'ов
+                total = Refund.objects.filter(
+                    payment=payment,
+                    is_partial=True
+                ).aggregate(Sum('amount'))['amount__sum'] or 0
+
                 if success:
                     refund.process_refund()
                     
                     # Если это полный возврат, отменяем подписку
-                    if refund.amount == payment.amount and payment.subscription:
+                    if (refund.amount == payment.amount or total == payment.amount) and payment.subscription:
                         PaymentService.cancel_subscription(payment.subscription)
                     
                     response_serializer = RefundSerializer(refund)

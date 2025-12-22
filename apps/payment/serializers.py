@@ -86,17 +86,6 @@ class PaymentCreateSerializer(serializers.Serializer):
             })
         
         return attrs
-    
-class PaymentAttemptSerializer(serializers.ModelSerializer):
-    """Сериализатор для попыток платежа"""
-    
-    class Meta:
-        model = PaymentAttempt
-        fields = [
-            'id', 'stripe_charge_id', 'status', 'error_message',
-            'metadata', 'created_at'
-        ]
-        read_only_fields = ['id', 'created_at']
 
 class RefundSerializer(serializers.ModelSerializer):
     """Сериализатор для возвратов"""

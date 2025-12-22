@@ -264,3 +264,7 @@ CELERY_BEAT_SCHEDULE = {
     #     'schedule': 3600.0,  # Каждый час
     # },
 }
+
+STRIPE_PUBLISHABLE_KEY = config('STRIPE_PUBLISHABLE_KEY', default='')
+STRIPE_SECRET_KEY = config('STRIPE_SECRET_KEY', default='')
+STRIPE_WEBHOOK_SECRET = config('STRIPE_WEBHOOK_SECRET', default='')

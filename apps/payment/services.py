@@ -5,7 +5,7 @@ from decimal import Decimal
 from typing import Dict, Optional, Tuple
 import logging
 
-from .models import Payment, PaymentAttempt, WebhookEvent
+from .models import Payment, WebhookEvent
 from apps.subscribe.models import Subscription, SubscriptionPlan, SubscriptionHistory
 
 logger = logging.getLogger(__name__)
@@ -40,7 +40,7 @@ class StripeService:
         try:
             # Получаем или создаем клиента
             user = payment.user
-            if not user.stipe_customer_id:
+            if not user.stripe_customer_id:
                 customer_id = StripeService.create_customer(user)
                 if customer_id:
                     user.stripe_customer_id = customer_id
@@ -135,14 +135,17 @@ class PaymentService:
     def create_subscription_payment(user, plan: SubscriptionPlan) -> Tuple[Payment, Subscription]:
         """Создает платеж для подписки"""
         # Создаем подписку
-        subscription = Subscription.objects.create(
-            user=user,
-            plan=plan,
-            status='pending',
-            start_date=timezone.now(),
-            end_date=timezone.now()  # Будет обновлено после оплаты
-        )
+        subscription = Subscription.objects.filter(user=user).first()
+        if not subscription:
+            subscription = Subscription.objects.create(
+                user=user # Будет обновлено после оплаты
+            )
 
+        subscription.plan = plan
+        subscription.status='pending'
+        subscription.start_date=timezone.now()
+        subscription.end_date=timezone.now()
+        subscription.save()
         # Создаем платеж
         payment = Payment.objects.create(
             user=user,
